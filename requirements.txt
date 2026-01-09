@@ -1,0 +1,4 @@
+sendgrid
+requests
+beautifulsoup4
+lxml
