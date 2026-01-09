@@ -36,7 +36,7 @@ sites = [
     "https://www.zillow.com/"
 ]
 
-# Function to send email
+# Function to send email with error handling
 def send_email(subject, content):
     message = Mail(
         from_email=FROM_EMAIL,
@@ -45,13 +45,17 @@ def send_email(subject, content):
         plain_text_content=content
     )
     sg = SendGridAPIClient(SENDGRID_API_KEY)
-    sg.send(message)
+    try:
+        response = sg.send(message)
+        print(f"Email sent successfully, status: {response.status_code}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
 
 # Function to check sites
 def check_sites():
     for city in cities:
         for site in sites:
-            # Placeholder: in real scenario, parsing logic goes here
+            # Placeholder for real parsing logic
             found_house = f"Example house in {city} on {site} matching criteria"
             send_email("New House Found!", found_house)
 
