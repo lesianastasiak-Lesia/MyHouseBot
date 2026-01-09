@@ -2,12 +2,16 @@ import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-# Email configuration
+# -------------------------
+# CONFIGURATION (ENV)
+# -------------------------
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 TO_EMAIL = os.environ.get("TO_EMAIL")
 FROM_EMAIL = os.environ.get("FROM_EMAIL")
 
-# Search criteria
+# -------------------------
+# SEARCH CRITERIA
+# -------------------------
 criteria = {
     "year_built_min": 1960,
     "bedrooms_min": 3,
@@ -16,7 +20,6 @@ criteria = {
     "max_sqft": 1500
 }
 
-# Cities to search
 cities = [
     "Edmonton, AB", "London, ON", "Red Deer, AB", "Regina, SK",
     "Airdrie, AB", "Calgary, AB", "Windsor, ON", "Wood Buffalo, AB",
@@ -27,7 +30,6 @@ cities = [
     "Kelowna, BC", "St. Catharines, ON", "Ajax, ON"
 ]
 
-# Real estate websites
 sites = [
     "https://www.realtor.ca/",
     "https://www.housesigma.com/",
@@ -36,29 +38,38 @@ sites = [
     "https://www.zillow.com/"
 ]
 
-# Function to send email with error handling
+# -------------------------
+# SEND EMAIL FUNCTION
+# -------------------------
 def send_email(subject, content):
-    message = Mail(
-        from_email=FROM_EMAIL,
-        to_emails=TO_EMAIL,
-        subject=subject,
-        plain_text_content=content
-    )
-    sg = SendGridAPIClient(SENDGRID_API_KEY)
     try:
+        message = Mail(
+            from_email=FROM_EMAIL,
+            to_emails=TO_EMAIL,
+            subject=subject,
+            plain_text_content=content
+        )
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
         response = sg.send(message)
         print(f"Email sent successfully, status: {response.status_code}")
     except Exception as e:
+        # Логуємо тільки зрозумілі повідомлення
         print(f"Error sending email: {e}")
 
-# Function to check sites
+# -------------------------
+# CHECK SITES FUNCTION
+# -------------------------
 def check_sites():
     for city in cities:
         for site in sites:
-            # Placeholder for real parsing logic
+            # -------------------------
+            # Placeholder для реальної логіки парсингу
+            # -------------------------
             found_house = f"Example house in {city} on {site} matching criteria"
             send_email("New House Found!", found_house)
 
-# Run the bot
+# -------------------------
+# RUN BOT
+# -------------------------
 if __name__=="__main__":
     check_sites()
