@@ -53,11 +53,8 @@ def send_email(subject, content):
 def check_sites():
     for city in cities:
         for site in sites:
-            # TODO: add real parsing logic for each site
-            # This is an example placeholder
+            # Example placeholder
             found_house = f"Example house in {city} on {site} matching criteria"
-            
-            # Send email notification
             send_email("New House Found!", found_house)
 
 # === RUN BOT ===
