@@ -1,15 +1,13 @@
 import os
-import requests
-from bs4 import BeautifulSoup
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-# === EMAIL SETTINGS ===
+# Email settings
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 TO_EMAIL = os.environ.get("TO_EMAIL")
 FROM_EMAIL = os.environ.get("FROM_EMAIL")
 
-# === SEARCH CRITERIA ===
+# Search criteria
 criteria = {
     "year_built_min": 1960,
     "bedrooms_min": 3,
@@ -18,7 +16,7 @@ criteria = {
     "max_sqft": 1500
 }
 
-# === CITIES ===
+# Cities to search
 cities = [
     "Edmonton, AB", "London, ON", "Red Deer, AB", "Regina, SK",
     "Airdrie, AB", "Calgary, AB", "Windsor, ON", "Wood Buffalo, AB",
@@ -29,7 +27,7 @@ cities = [
     "Kelowna, BC", "St. Catharines, ON", "Ajax, ON"
 ]
 
-# === REAL ESTATE SITES ===
+# Real estate sites
 sites = [
     "https://www.realtor.ca/",
     "https://www.housesigma.com/",
@@ -38,7 +36,7 @@ sites = [
     "https://www.zillow.com/"
 ]
 
-# === FUNCTION TO SEND EMAIL ===
+# Function to send email
 def send_email(subject, content):
     message = Mail(
         from_email=FROM_EMAIL,
@@ -49,7 +47,7 @@ def send_email(subject, content):
     sg = SendGridAPIClient(SENDGRID_API_KEY)
     sg.send(message)
 
-# === FUNCTION TO CHECK SITES ===
+# Function to check sites
 def check_sites():
     for city in cities:
         for site in sites:
@@ -57,6 +55,6 @@ def check_sites():
             found_house = f"Example house in {city} on {site} matching criteria"
             send_email("New House Found!", found_house)
 
-# === RUN BOT ===
+# Run the bot
 if __name__=="__main__":
     check_sites()
