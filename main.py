@@ -61,5 +61,5 @@ def check_sites():
             send_email("New House Found!", found_house)
 
 # === RUN BOT ===
-if name == "__main__":
+if __name__=="__main__":
     check_sites()
