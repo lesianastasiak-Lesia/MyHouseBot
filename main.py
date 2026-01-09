@@ -1,75 +1,102 @@
-import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+select("div.listing-card"):
+        try:
+            title = card.select_one("h2.title").get_text(strip=True)
+            price = card.select_one("span.price").get_text(strip=True)
+            link = "https://www.housesigma.com" + card.select_one("a").get("href")
+            beds = card.select_one("span.bedrooms").get_text(strip=True)
+            sqft = card.select_one("span.sqft").get_text(strip=True)
 
-# -------------------------
-# CONFIGURATION (ENV)
-# -------------------------
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
-TO_EMAIL = os.environ.get("TO_EMAIL")
-FROM_EMAIL = os.environ.get("FROM_EMAIL")
+            price_num = int(''.join(filter(str.isdigit, price)))
+            beds_num = int(''.join(filter(str.isdigit, beds)))
+            sqft_num = int(''.join(filter(str.isdigit, sqft)))
 
-# -------------------------
-# SEARCH CRITERIA
-# -------------------------
-criteria = {
-    "year_built_min": 1960,
-    "bedrooms_min": 3,
-    "price_min": 60000,
-    "price_max": 120000,
-    "max_sqft": 1500
+            if (criteria["price_min"] <= price_num <= criteria["price_max"] and
+                beds_num >= criteria["bedrooms_min"] and
+                sqft_num <= criteria["max_sqft"]):
+                results.append({"title": title, "price": price, "bedrooms": beds, "sqft": sqft, "link": link})
+        except:
+            continue
+    return results
+
+def extract_remax(soup):
+    results = []
+    if not soup: return results
+    for card in soup.select("div.property-card"):
+        try:
+            title = card.select_one("h2.property-address").get_text(strip=True)
+            price = card.select_one("span.price").get_text(strip=True)
+            link = card.select_one("a").get("href")
+            beds = card.select_one("li.bedrooms").get_text(strip=True)
+            sqft = card.select_one("li.sqft").get_text(strip=True)
+
+            price_num = int(''.join(filter(str.isdigit, price)))
+            beds_num = int(''.join(filter(str.isdigit, beds)))
+            sqft_num = int(''.join(filter(str.isdigit, sqft)))
+
+            if (criteria["price_min"] <= price_num <= criteria["price_max"] and
+                beds_num >= criteria["bedrooms_min"] and
+                sqft_num <= criteria["max_sqft"]):
+                results.append({"title": title, "price": price, "bedrooms": beds, "sqft": sqft, "link": link})
+        except:
+            continue
+    return results
+
+def extract_zillow(soup):
+    results = []
+    if not soup: return results
+    for card in soup.select("article.list-card"):
+        try:
+            title = card.select_one("address.list-card-addr").get_text(strip=True)
+            price = card.select_one("div.list-card-price").get_text(strip=True)
+            link = card.select_one("a.list-card-link").get("href")
+            beds = card.select_one("ul.list-card-details li:nth-child(1)").get_text(strip=True)
+            sqft = card.select_one("ul.list-card-details li:nth-child(3)").get_text(strip=True)
+
+            price_num = int(''.join(filter(str.isdigit, price)))
+            beds_num = int(''.join(filter(str.isdigit, beds)))
+            sqft_num = int(''.join(filter(str.isdigit, sqft)))
+
+            if (criteria["price_min"] <= price_num <= criteria["price_max"] and
+                beds_num >= criteria["bedrooms_min"] and
+                sqft_num <= criteria["max_sqft"]):
+                results.append({"title": title, "price": price, "bedrooms": beds, "sqft": sqft, "link": link})
+        except:
+            continue
+    return results
+
+extractors = {
+    "Realtor": extract_realtor,
+    "Zolo": extract_zolo,
+    "HouseSigma": extract_housesigma,
+    "Remax": extract_remax,
+    "Zillow": extract_zillow
 }
 
-cities = [
-    "Edmonton, AB", "London, ON", "Red Deer, AB", "Regina, SK",
-    "Airdrie, AB", "Calgary, AB", "Windsor, ON", "Wood Buffalo, AB",
-    "Quebec, QC", "St. John's, NL", "Saskatoon, SK", "Brantford, ON",
-    "Montreal, QC", "Hamilton, ON", "Peterborough, ON", "Winnipeg, MB",
-    "Kingston, ON", "Oshawa, ON", "Ottawa, ON", "Barrie, ON",
-    "Kitchener, ON", "Victoria, BC", "Moncton, NB", "Gatineau, QC",
-    "Kelowna, BC", "St. Catharines, ON", "Ajax, ON"
-]
+# -------- MAIN ASYNC FUNCTION --------
+async def main():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
 
-sites = [
-    "https://www.realtor.ca/",
-    "https://www.housesigma.com/",
-    "https://www.zolo.ca/",
-    "https://www.remax.ca/",
-    "https://www.zillow.com/"
-]
+        for city in cities:
+            city_url = city.replace(" ", "-")
+            for site_name, url_template in sites.items():
+                url = url_template.format(city=city_url)
+                soup = await fetch_page(url, page)
+                houses = extractors[site_name](soup)
 
-# -------------------------
-# SEND EMAIL FUNCTION
-# -------------------------
-def send_email(subject, content):
-    try:
-        message = Mail(
-            from_email=FROM_EMAIL,
-            to_emails=TO_EMAIL,
-            subject=subject,
-            plain_text_content=content
-        )
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
-        response = sg.send(message)
-        print(f"Email sent successfully, status: {response.status_code}")
-    except Exception as e:
-        # Логуємо тільки зрозумілі повідомлення
-        print(f"Error sending email: {e}")
+                for h in houses:
+                    body = f"""
+City: {city}
+Site: {site_name}
+Title: {h['title']}
+Price: {h['price']}
+Bedrooms: {h['bedrooms']}
+SqFt: {h['sqft']}
+Link: {h['link']}
+"""
+                    send_email("New House Found!", body)
+        await browser.close()
 
-# -------------------------
-# CHECK SITES FUNCTION
-# -------------------------
-def check_sites():
-    for city in cities:
-        for site in sites:
-            # -------------------------
-            # Placeholder для реальної логіки парсингу
-            # -------------------------
-            found_house = f"Example house in {city} on {site} matching criteria"
-            send_email("New House Found!", found_house)
-
-# -------------------------
-# RUN BOT
-# -------------------------
-if __name__=="__main__":
-    check_sites()
+if name == "__main__":
+    asyncio.run(main())
