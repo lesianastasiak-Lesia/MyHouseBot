@@ -51,7 +51,7 @@ def send_email(subject, content):
 def check_sites():
     for city in cities:
         for site in sites:
-            # Example placeholder for actual parsing logic
+            # Placeholder: in real scenario, parsing logic goes here
             found_house = f"Example house in {city} on {site} matching criteria"
             send_email("New House Found!", found_house)
 
