@@ -2,7 +2,7 @@ import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-# Email settings
+# Email configuration
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 TO_EMAIL = os.environ.get("TO_EMAIL")
 FROM_EMAIL = os.environ.get("FROM_EMAIL")
@@ -27,7 +27,7 @@ cities = [
     "Kelowna, BC", "St. Catharines, ON", "Ajax, ON"
 ]
 
-# Real estate sites
+# Real estate websites
 sites = [
     "https://www.realtor.ca/",
     "https://www.housesigma.com/",
@@ -51,7 +51,7 @@ def send_email(subject, content):
 def check_sites():
     for city in cities:
         for site in sites:
-            # Example placeholder
+            # Example placeholder for actual parsing logic
             found_house = f"Example house in {city} on {site} matching criteria"
             send_email("New House Found!", found_house)
 
